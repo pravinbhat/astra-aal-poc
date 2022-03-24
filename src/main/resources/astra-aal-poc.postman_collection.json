@@ -1,0 +1,124 @@
+{
+	"info": {
+		"_postman_id": "665bdeef-a5df-43c2-89aa-e843d2993316",
+		"name": "astra-aal-poc",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Flights",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/flights",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"flights"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Flight",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/flights/2",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"flights",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Flight",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"flightId\": 1,\n    \"flightName\": \"F1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/flights",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"flights"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Flight Copy",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"flightId\": 1,\n    \"flightName\": \"Flight-1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/flights/1",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"flights",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Flight",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"flightId\": 1,\n    \"flightName\": \"Flight-1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/flights/2",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"flights",
+						"2"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

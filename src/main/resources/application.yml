@@ -1,0 +1,24 @@
+spring.application.name: astra-aal-poc
+
+server.port: 8080
+management.server.port: 8082
+
+springfox:
+  documentation:
+    enabled: false
+
+spring.data.cassandra:
+  keyspace-name: ${ASTRA_DB_KEYSPACE}
+  username: ${ASTRA_DB_USERNAME}
+  password: ${ASTRA_DB_PASSWORD}
+  # Create the schema on the fly if it doesn't exist
+  schema-action: CREATE_IF_NOT_EXISTS
+  # Increase timeouts when connecting to Astra from a dev workstation
+  request:
+    timeout: 10s
+  connection:
+    connect-timeout: 10s
+    init-query-timeout: 10s
+
+datastax.astra:
+  secure-connect-bundle: ${ASTRA_DB_BUNDLE}
