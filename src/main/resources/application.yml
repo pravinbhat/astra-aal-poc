@@ -1,11 +1,36 @@
 spring.application.name: astra-aal-poc
 
 server.port: 8080
-management.server.port: 8082
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
 
 springfox:
   documentation:
     enabled: false
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      FlightController:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 2
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
 
 spring.data.cassandra:
   keyspace-name: ${ASTRA_DB_KEYSPACE}
