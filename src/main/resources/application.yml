@@ -14,6 +14,15 @@ management:
     health:
       show-details: always
 
+spring:
+  data:
+    cassandra:
+      keyspace-name: test_ks
+      contact-points:
+        - 127.0.0.1
+      port: 9042
+      local-datacenter: Cassandra
+
 springfox:
   documentation:
     enabled: false
@@ -31,19 +40,3 @@ resilience4j:
         permittedNumberOfCallsInHalfOpenState: 2
         slidingWindowSize: 10
         slidingWindowType: COUNT_BASED
-
-spring.data.cassandra:
-  keyspace-name: ${ASTRA_DB_KEYSPACE}
-  username: ${ASTRA_DB_USERNAME}
-  password: ${ASTRA_DB_PASSWORD}
-  # Create the schema on the fly if it doesn't exist
-  schema-action: CREATE_IF_NOT_EXISTS
-  # Increase timeouts when connecting to Astra from a dev workstation
-  request:
-    timeout: 10s
-  connection:
-    connect-timeout: 10s
-    init-query-timeout: 10s
-
-datastax.astra:
-  secure-connect-bundle: ${ASTRA_DB_BUNDLE}

@@ -6,6 +6,24 @@
 	},
 	"item": [
 		{
+			"name": "actuator-health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/actuator/health",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"actuator",
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Flights",
 			"request": {
 				"method": "GET",
@@ -47,7 +65,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"flightId\": 1,\n    \"flightName\": \"F1\"\n}",
+					"raw": "{\n    \"flightId\": 1,\n    \"flightName\": \"Clt-Mumbai\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
