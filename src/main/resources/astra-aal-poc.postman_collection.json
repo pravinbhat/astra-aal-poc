@@ -46,13 +46,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server}}/flights/2",
+					"raw": "{{server}}/flights/ced047d0-adf2-11ec-93fb-c148406b5952",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
 						"flights",
-						"2"
+						"ced047d0-adf2-11ec-93fb-c148406b5952"
 					]
 				}
 			},
@@ -65,7 +65,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"flightId\": 1,\n    \"flightName\": \"Clt-Mumbai\"\n}",
+					"raw": "{\n    \"flightName\": \"NY-London\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -91,7 +91,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"flightId\": 1,\n    \"flightName\": \"Flight-1\"\n}",
+					"raw": "{\n    \"flightId\": \"ced047d0-adf2-11ec-93fb-c148406b5952\",\n    \"flightName\": \"Flight-1234\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -99,13 +99,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{server}}/flights/1",
+					"raw": "{{server}}/flights/ced047d0-adf2-11ec-93fb-c148406b5952",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
 						"flights",
-						"1"
+						"ced047d0-adf2-11ec-93fb-c148406b5952"
 					]
 				}
 			},
@@ -126,13 +126,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{server}}/flights/2",
+					"raw": "{{server}}/flights/ced047d0-adf2-11ec-93fb-c148406b5952",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
 						"flights",
-						"2"
+						"ced047d0-adf2-11ec-93fb-c148406b5952"
 					]
 				}
 			},
