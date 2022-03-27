@@ -15,6 +15,7 @@ public interface FlightRepo extends Repository<Flight, UUID> {
 	long count();
 
 	void delete(Flight entity);
+
 	void deleteById(UUID flightId);
 
 	boolean existsById(UUID primaryKey);

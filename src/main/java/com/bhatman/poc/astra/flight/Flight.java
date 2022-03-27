@@ -16,7 +16,7 @@ import lombok.Data;
 public class Flight {
 	@PrimaryKey(value = "flight_id")
 	private UUID flightId;
-	
+
 	@Column(value = "flight_name")
 	private String flightName;
 }
