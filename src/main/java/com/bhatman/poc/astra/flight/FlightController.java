@@ -1,9 +1,7 @@
 package com.bhatman.poc.astra.flight;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,7 +29,6 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 public class FlightController {
 
 	private static final String Flight_CircuitBreaker = "FlightController";
-	Map<Long, Flight> flights = new HashMap<>();
 
 	@Autowired
 	HealthCheck hc;
@@ -53,7 +50,7 @@ public class FlightController {
 	}
 
 	public ResponseEntity<List<Flight>> healthErrorAllFlights(Exception e) {
-		if (!hc.isHealthly()) {
+		if (!hc.isHealthly(e)) {
 			return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
 		}
 
@@ -91,7 +88,7 @@ public class FlightController {
 	}
 
 	public ResponseEntity<List<Flight>> healthErrorOneFlight(Exception e) {
-		if (!hc.isHealthly()) {
+		if (!hc.isHealthly(e)) {
 			return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
 		}
 
@@ -106,7 +103,7 @@ public class FlightController {
 	}
 
 	public ResponseEntity<HttpStatus> healthErrorHttpStatus(Exception e) {
-		if (!hc.isHealthly()) {
+		if (!hc.isHealthly(e)) {
 			return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
 		}
 

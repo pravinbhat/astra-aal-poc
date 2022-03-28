@@ -2,6 +2,8 @@ package com.bhatman.poc.astra.health;
 
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -23,18 +25,25 @@ public class HealthCheck {
 	@Value("${astra.token}")
 	String astraToken;
 
-	String health_url = "https://api.astra.datastax.com/v2/databases/";
+	private final static String ASTRA_HEALTH_URL = "https://api.astra.datastax.com/v2/databases/";
+	private final static String STATUS_ONLINE = "ONLINE";
+	private HttpEntity<String> entity = null;
 
-	public boolean isHealthly() {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-		headers.setBearerAuth(astraToken);
-		HttpEntity<String> entity = new HttpEntity<String>(headers);
+	private static final Logger logger = LoggerFactory.getLogger(HealthCheck.class);
 
-		ResponseEntity<Health[]> healthStatus = restTemplate.exchange(health_url + astraDbId + "/datacenters",
+	public boolean isHealthly(Exception e) {
+		logger.warn("Received exception " + e.getMessage());
+		if (null == entity) {
+			HttpHeaders headers = new HttpHeaders();
+			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+			headers.setBearerAuth(astraToken);
+			entity = new HttpEntity<String>(headers);
+		}
+
+		ResponseEntity<Health[]> healthStatus = restTemplate.exchange(ASTRA_HEALTH_URL + astraDbId + "/datacenters",
 				HttpMethod.GET, entity, Health[].class);
-		if ("ONLINE".equalsIgnoreCase(healthStatus.getBody()[0].getStatus())) {
-			System.out.println("Astra status is " + healthStatus.getBody()[0]);
+		logger.warn("Astra health status " + healthStatus.getBody()[0]);
+		if (STATUS_ONLINE.equalsIgnoreCase(healthStatus.getBody()[0].getStatus())) {
 			return true;
 		}
 
