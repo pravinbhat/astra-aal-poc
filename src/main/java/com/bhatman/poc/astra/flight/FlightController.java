@@ -36,71 +36,64 @@ public class FlightController {
 	FlightRepo flightRepo;
 
 	@GetMapping
-	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "sendAstraRegionErrorMsg")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorAllFlights")
 	public ResponseEntity<List<Flight>> all() throws Exception {
-		if (Math.random() < 0.4) {
-			throw new Exception("Unable to get Flight data!");
-		}
-		try {
-			List<Flight> flights = new ArrayList<Flight>();
-			flightRepo.findAll().forEach(flights::add);
+		List<Flight> flights = new ArrayList<Flight>();
+		flightRepo.findAll().forEach(flights::add);
 
-			if (flights.isEmpty()) {
-				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-			}
-
-			return new ResponseEntity<>(flights, HttpStatus.OK);
-		} catch (Exception e) {
-			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		if (flights.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		}
+
+		return new ResponseEntity<>(flights, HttpStatus.OK);
 	}
 
-	public ResponseEntity<List<Flight>> sendAstraRegionErrorMsg(Exception e) {
-		List<Flight> ret = new ArrayList<>();
-		ret.add(new Flight(UUID.randomUUID(), "Fallback: " + e.getMessage()));
-
-		return new ResponseEntity<>(ret, HttpStatus.OK);
+	public ResponseEntity<List<Flight>> healthErrorAllFlights(Exception e) {
+		return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
 	}
 
 	@PostMapping
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<Flight> add(@RequestBody Flight newFlight) {
-		try {
-			Flight _flight = flightRepo.save(new Flight(Uuids.timeBased(), newFlight.getFlightName()));
-			return new ResponseEntity<>(_flight, HttpStatus.CREATED);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+		Flight flight = flightRepo.save(new Flight(Uuids.timeBased(), newFlight.getFlightName()));
+		return new ResponseEntity<>(flight, HttpStatus.CREATED);
 	}
 
 	@GetMapping("/{flightId}")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<Flight> get(@PathVariable UUID flightId) {
 		Optional<Flight> flight = flightRepo.findById(flightId);
 
 		if (flight.isPresent()) {
 			return new ResponseEntity<>(flight.get(), HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
+
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
 	@PutMapping("/{flightId}")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<Flight> update(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
-		Assert.isTrue(flightId.equals(updateFlight.getFlightId()), "Flight Id provided does not match the value in path");
+		Assert.isTrue(flightId.equals(updateFlight.getFlightId()),
+				"Flight Id provided does not match the value in path");
 		Objects.requireNonNull(updateFlight);
 
 		return new ResponseEntity<>(flightRepo.save(updateFlight), HttpStatus.OK);
 
 	}
 
-	@DeleteMapping("/{flightId}")
-	public ResponseEntity<HttpStatus> delete(@PathVariable UUID flightId) {
-		try {
-			flightRepo.deleteById(flightId);
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-		} catch (Exception e) {
-			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+	public ResponseEntity<List<Flight>> healthErrorOneFlight(Exception e) {
+		return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
 	}
 
+	@DeleteMapping("/{flightId}")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorHttpStatus")
+	public ResponseEntity<HttpStatus> delete(@PathVariable UUID flightId) {
+		flightRepo.deleteById(flightId);
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+
+	public ResponseEntity<List<Flight>> healthErrorHttpStatus(Exception e) {
+		return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
+	}
 }
