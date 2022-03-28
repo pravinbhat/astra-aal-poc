@@ -63,7 +63,7 @@ public class FlightController {
 	}
 
 	@PostMapping
-	public ResponseEntity<Flight> newFlight(@RequestBody Flight newFlight) {
+	public ResponseEntity<Flight> add(@RequestBody Flight newFlight) {
 		try {
 			Flight _flight = flightRepo.save(new Flight(Uuids.timeBased(), newFlight.getFlightName()));
 			return new ResponseEntity<>(_flight, HttpStatus.CREATED);
@@ -73,9 +73,9 @@ public class FlightController {
 		}
 	}
 
-	@GetMapping("/{id}")
-	public ResponseEntity<Flight> one(@PathVariable UUID id) {
-		Optional<Flight> flight = flightRepo.findById(id);
+	@GetMapping("/{flightId}")
+	public ResponseEntity<Flight> get(@PathVariable UUID flightId) {
+		Optional<Flight> flight = flightRepo.findById(flightId);
 
 		if (flight.isPresent()) {
 			return new ResponseEntity<>(flight.get(), HttpStatus.OK);
@@ -84,19 +84,19 @@ public class FlightController {
 		}
 	}
 
-	@PutMapping("/{id}")
-	public ResponseEntity<Flight> replaceFlight(@RequestBody Flight newFlight, @PathVariable UUID id) {
-		Assert.isTrue(id.equals(newFlight.getFlightId()), "Flight Id provided does not match the value in path");
-		Objects.requireNonNull(newFlight);
+	@PutMapping("/{flightId}")
+	public ResponseEntity<Flight> update(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
+		Assert.isTrue(flightId.equals(updateFlight.getFlightId()), "Flight Id provided does not match the value in path");
+		Objects.requireNonNull(updateFlight);
 
-		return new ResponseEntity<>(flightRepo.save(newFlight), HttpStatus.OK);
+		return new ResponseEntity<>(flightRepo.save(updateFlight), HttpStatus.OK);
 
 	}
 
-	@DeleteMapping("/{id}")
-	public ResponseEntity<HttpStatus> deleteFlight(@PathVariable UUID id) {
+	@DeleteMapping("/{flightId}")
+	public ResponseEntity<HttpStatus> delete(@PathVariable UUID flightId) {
 		try {
-			flightRepo.deleteById(id);
+			flightRepo.deleteById(flightId);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} catch (Exception e) {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
