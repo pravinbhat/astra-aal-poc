@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bhatman.poc.astra.health.HealthCheck;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -31,6 +32,9 @@ public class FlightController {
 
 	private static final String Flight_CircuitBreaker = "FlightController";
 	Map<Long, Flight> flights = new HashMap<>();
+
+	@Autowired
+	HealthCheck hc;
 
 	@Autowired
 	FlightRepo flightRepo;
@@ -49,7 +53,11 @@ public class FlightController {
 	}
 
 	public ResponseEntity<List<Flight>> healthErrorAllFlights(Exception e) {
-		return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
+		if (!hc.isHealthly()) {
+			return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
+		}
+
+		return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@PostMapping
@@ -83,7 +91,11 @@ public class FlightController {
 	}
 
 	public ResponseEntity<List<Flight>> healthErrorOneFlight(Exception e) {
-		return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
+		if (!hc.isHealthly()) {
+			return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
+		}
+
+		return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@DeleteMapping("/{flightId}")
@@ -93,7 +105,11 @@ public class FlightController {
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
-	public ResponseEntity<List<Flight>> healthErrorHttpStatus(Exception e) {
-		return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
+	public ResponseEntity<HttpStatus> healthErrorHttpStatus(Exception e) {
+		if (!hc.isHealthly()) {
+			return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
+		}
+
+		return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }

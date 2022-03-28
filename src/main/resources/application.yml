@@ -2,6 +2,10 @@ spring.application.name: astra-aal-poc
 
 server.port: 8080
 
+astra:
+  dbid: <db-id>
+  token: <token>
+
 management:
   health:
     circuitbreakers:
