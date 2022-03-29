@@ -1,7 +1,8 @@
 package com.bhatman.poc.astra.health;
 
 import java.util.Arrays;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,13 +17,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.metadata.Metadata;
 
 @Service
 public class HealthCheck {
 	@Autowired
 	private RestTemplate restTemplate;
-	
+
 	@Autowired
 	CqlSession cqlSession;
 
@@ -31,19 +32,38 @@ public class HealthCheck {
 
 	@Value("${astra.token}")
 	String astraToken;
-	
+
+	@Value("${astra.timeout}")
+	Long astraTimeout;
+
 	@Value("${spring.data.cassandra.keyspace-name}")
 	String keyspaceName;
 
 	private final static String ASTRA_HEALTH_URL = "https://api.astra.datastax.com/v2/databases/";
 	private final static String STATUS_ONLINE = "ONLINE";
-	private final static String VALID_KEYSPACE = "replication";
-	
+
 	private HttpEntity<String> entity = null;
 
 	private static final Logger logger = LoggerFactory.getLogger(HealthCheck.class);
 
 	public boolean isHealthly(Exception e) {
+		CompletableFuture<Metadata> results = checkHealthly(e);
+		if (null == results) {
+			return false;
+		}
+		Metadata ksm = null;
+		try {
+			ksm = results.get(astraTimeout, TimeUnit.SECONDS);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			return false;
+		}
+		logger.info("Keyspace is accessible within Astra region " + ksm.getKeyspace(keyspaceName).get().describe(true));
+
+		return true;
+	}
+
+	public CompletableFuture<Metadata> checkHealthly(Exception e) {
 		logger.warn("Received exception " + e.getMessage());
 		if (null == entity) {
 			HttpHeaders headers = new HttpHeaders();
@@ -57,14 +77,10 @@ public class HealthCheck {
 		logger.info("Your Astra region health status is " + healthStatus.getBody()[0]);
 		if (STATUS_ONLINE.equalsIgnoreCase(healthStatus.getBody()[0].getStatus())) {
 			logger.info("Checking keyspace is accessible within Astra region");
-			KeyspaceMetadata ksMeta =  cqlSession.getMetadata().getKeyspace(keyspaceName).get();
-			if (ksMeta.describe(true).contains(VALID_KEYSPACE)) {
-				logger.info("Keyspace " + keyspaceName + " is accessible with Metadata as " + ksMeta.describe(true));
-				return true;
-			}
-			logger.error("Keyspace " + keyspaceName + " is not accessible");
+			return CompletableFuture.supplyAsync(() -> cqlSession.refreshSchema());
 		}
 
-		return false;
+		return null;
 	}
+
 }

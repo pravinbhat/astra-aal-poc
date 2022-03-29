@@ -5,6 +5,7 @@ server.port: 8080
 astra:
   dbid: <db-id>
   token: <token>
+  timeout: 3
 
 management:
   health:
