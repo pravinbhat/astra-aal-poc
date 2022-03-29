@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.cassandra.CqlSessionBuilderCustomi
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
@@ -23,6 +24,7 @@ public class AstraAALPocApplication {
 	 * Used to connect to Astra via secure-connect-bundle
 	 */
 	@Bean
+	@Profile("!local")
 	public CqlSessionBuilderCustomizer sessionBuilderCustomizer(AstraConfig astraProperties) {
 		Path bundle = astraProperties.getSecureConnectBundle().toPath();
 		return builder -> builder.withCloudSecureConnectBundle(bundle);

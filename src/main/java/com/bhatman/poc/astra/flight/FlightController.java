@@ -83,7 +83,8 @@ public class FlightController {
 				"Flight Id provided does not match the value in path");
 		Objects.requireNonNull(updateFlight);
 
-		return new ResponseEntity<>(new FlightResponse(flightRepo.save(updateFlight), "Flight updated!"), HttpStatus.OK);
+		return new ResponseEntity<>(new FlightResponse(flightRepo.save(updateFlight), "Flight updated!"),
+				HttpStatus.OK);
 
 	}
 
