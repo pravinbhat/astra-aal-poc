@@ -59,18 +59,18 @@ public class FlightController {
 
 	@PostMapping
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
-	public ResponseEntity<Flight> add(@RequestBody Flight newFlight) {
+	public ResponseEntity<FlightResponse> add(@RequestBody Flight newFlight) {
 		Flight flight = flightRepo.save(new Flight(Uuids.timeBased(), newFlight.getFlightName()));
-		return new ResponseEntity<>(flight, HttpStatus.CREATED);
+		return new ResponseEntity<>(new FlightResponse(flight, "Flight created!"), HttpStatus.CREATED);
 	}
 
 	@GetMapping("/{flightId}")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
-	public ResponseEntity<Flight> get(@PathVariable UUID flightId) {
+	public ResponseEntity<FlightResponse> get(@PathVariable UUID flightId) {
 		Optional<Flight> flight = flightRepo.findById(flightId);
 
 		if (flight.isPresent()) {
-			return new ResponseEntity<>(flight.get(), HttpStatus.OK);
+			return new ResponseEntity<>(new FlightResponse(flight.get(), "Flight found!"), HttpStatus.OK);
 		}
 
 		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -78,21 +78,21 @@ public class FlightController {
 
 	@PutMapping("/{flightId}")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
-	public ResponseEntity<Flight> update(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
+	public ResponseEntity<FlightResponse> update(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
 		Assert.isTrue(flightId.equals(updateFlight.getFlightId()),
 				"Flight Id provided does not match the value in path");
 		Objects.requireNonNull(updateFlight);
 
-		return new ResponseEntity<>(flightRepo.save(updateFlight), HttpStatus.OK);
+		return new ResponseEntity<>(new FlightResponse(flightRepo.save(updateFlight), "Flight updated!"), HttpStatus.OK);
 
 	}
 
-	public ResponseEntity<List<Flight>> healthErrorOneFlight(Exception e) {
+	public ResponseEntity<FlightResponse> healthErrorOneFlight(Exception e) {
 		if (!hc.isHealthly(e)) {
-			return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
+			return new ResponseEntity<>(new FlightResponse(null, e.getMessage()), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 
-		return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		return new ResponseEntity<>(new FlightResponse(null, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@DeleteMapping("/{flightId}")
