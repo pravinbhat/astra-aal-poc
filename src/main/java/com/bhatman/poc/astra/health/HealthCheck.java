@@ -27,16 +27,16 @@ public class HealthCheck {
 	@Autowired
 	CqlSession cqlSession;
 
-	@Value("${astra.dbid}")
+	@Value("${astra.db.id}")
 	String astraDbId;
 
-	@Value("${astra.token}")
+	@Value("${astra.db.application.token}")
 	String astraToken;
 
-	@Value("${astra.timeout}")
+	@Value("${astra.db.timeout}")
 	Long astraTimeout;
 
-	@Value("${spring.data.cassandra.keyspace-name}")
+	@Value("${astra.db.keyspace}")
 	String keyspaceName;
 
 	private final static String ASTRA_HEALTH_URL = "https://api.astra.datastax.com/v2/databases/";

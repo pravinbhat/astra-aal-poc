@@ -1,11 +1,29 @@
-spring.application.name: astra-aal-poc
+spring:
+  application:
+    name: astra-aal-poc
+  data:
+    cassandra:
+      keyspace-name: <keyspace>
+      username: <client_id>
+      password: <secret>
+      schema-action: create-if-not-exists
+      request:
+        timeout: 10s
+      connection:
+        connect-timeout: 10s
+        init-query-timeout: 10s
 
 server.port: 8080
+      
+datastax.astra:
+    secure-connect-bundle: secure-connect.zip
 
-astra:
-  dbid: <db-id>
-  token: <token>
-  timeout: 3
+astra.db:
+  id: <db-id>
+  region: us-east-1
+  keyspace: <keyspace>
+  application.token: <token>
+  timeout: 5
 
 management:
   health:
@@ -19,14 +37,6 @@ management:
     health:
       show-details: always
 
-spring:
-  data:
-    cassandra:
-      keyspace-name: test_ks
-      contact-points:
-        - 127.0.0.1
-      port: 9042
-      local-datacenter: Cassandra
 
 springfox:
   documentation:
