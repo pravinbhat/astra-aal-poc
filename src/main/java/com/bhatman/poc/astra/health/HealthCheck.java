@@ -51,29 +51,23 @@ public class HealthCheck {
 		if (null == results) {
 			return false;
 		}
-		Metadata ksm = null;
 		try {
-			ksm = results.get(astraTimeout, TimeUnit.SECONDS);
+			Metadata ksm = results.get(astraTimeout, TimeUnit.SECONDS);
+			logger.info(
+					"Keyspace is accessible within Astra region " + ksm.getKeyspace(keyspaceName).get().describe(true));
 		} catch (Exception e1) {
+			logger.error("Keyspace " + keyspaceName + " is not accessible within Astra region!!");
 			e1.printStackTrace();
 			return false;
 		}
-		logger.info("Keyspace is accessible within Astra region " + ksm.getKeyspace(keyspaceName).get().describe(true));
 
 		return true;
 	}
 
 	public CompletableFuture<Metadata> checkHealthly(Exception e) {
 		logger.warn("Received exception " + e.getMessage());
-		if (null == entity) {
-			HttpHeaders headers = new HttpHeaders();
-			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-			headers.setBearerAuth(astraToken);
-			entity = new HttpEntity<String>(headers);
-		}
-
 		ResponseEntity<Health[]> healthStatus = restTemplate.exchange(ASTRA_HEALTH_URL + astraDbId + "/datacenters",
-				HttpMethod.GET, entity, Health[].class);
+				HttpMethod.GET, getHttpEntity(), Health[].class);
 		logger.info("Your Astra region health status is " + healthStatus.getBody()[0]);
 		if (STATUS_ONLINE.equalsIgnoreCase(healthStatus.getBody()[0].getStatus())) {
 			logger.info("Checking keyspace is accessible within Astra region");
@@ -81,6 +75,17 @@ public class HealthCheck {
 		}
 
 		return null;
+	}
+
+	private HttpEntity<String> getHttpEntity() {
+		if (null == entity) {
+			HttpHeaders headers = new HttpHeaders();
+			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+			headers.setBearerAuth(astraToken);
+			entity = new HttpEntity<String>(headers);
+		}
+
+		return entity;
 	}
 
 }

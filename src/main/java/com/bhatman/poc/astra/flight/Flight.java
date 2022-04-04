@@ -12,7 +12,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Table
-
 public class Flight {
 	@PrimaryKey(value = "flight_id")
 	private UUID flightId;

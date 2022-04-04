@@ -85,7 +85,7 @@
 			"response": []
 		},
 		{
-			"name": "Flight Copy",
+			"name": "Flight",
 			"request": {
 				"method": "PUT",
 				"header": [],
