@@ -5,14 +5,14 @@ spring:
     cassandra:
       keyspace-name: test_ks
       contact-points:
-        - 127.0.0.1
-      port: 9042
-      local-datacenter: Cassandra
+        - 127.0.0.1:9042
+      local-datacenter: dc1
       request:
         timeout: 10s
       connection:
         connect-timeout: 10s
         init-query-timeout: 10s
+      config: file:///cassandra.conf
 
 server.port: 8080
       
@@ -56,3 +56,12 @@ resilience4j:
         permittedNumberOfCallsInHalfOpenState: 2
         slidingWindowSize: 10
         slidingWindowType: COUNT_BASED
+
+cassandra.metrics:
+  session-metrics:
+    - bytes-sent
+    - connected-nodes
+  node-metrics:
+    - pool.open-connections
+    - pool.in-flight
+    - speculative-executions
