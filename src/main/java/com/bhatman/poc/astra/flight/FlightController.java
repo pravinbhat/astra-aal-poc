@@ -20,7 +20,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bhatman.poc.astra.health.HealthCheck;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
@@ -35,6 +38,9 @@ public class FlightController {
 
 	@Autowired
 	FlightRepo flightRepo;
+
+	@Autowired
+	CqlSession cqlSession;
 
 	@GetMapping
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorAllFlights")
@@ -82,6 +88,8 @@ public class FlightController {
 		Assert.isTrue(flightId.equals(updateFlight.getFlightId()),
 				"Flight Id provided does not match the value in path");
 		Objects.requireNonNull(updateFlight);
+		ResponseEntity re = get(flightId);
+		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
 
 		return new ResponseEntity<>(new FlightResponse(flightRepo.save(updateFlight), "Flight updated!"),
 				HttpStatus.OK);
@@ -100,6 +108,23 @@ public class FlightController {
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorHttpStatus")
 	public ResponseEntity<HttpStatus> delete(@PathVariable UUID flightId) {
 		flightRepo.deleteById(flightId);
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+
+	// This (spring-data based truncate) works with C* & DSE but not Astra
+	@DeleteMapping("/all")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorHttpStatus")
+	public ResponseEntity<HttpStatus> deleteAll() {
+		flightRepo.deleteAll();
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+
+	// This works with everything including Astra
+	@DeleteMapping("/truncate")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorHttpStatus")
+	public ResponseEntity<HttpStatus> deleteAllNative() {
+		cqlSession.execute(QueryBuilder.truncate(CqlIdentifier.fromCql("flight")).build());
+
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 

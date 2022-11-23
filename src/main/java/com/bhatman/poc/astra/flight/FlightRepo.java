@@ -3,6 +3,7 @@ package com.bhatman.poc.astra.flight;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.cassandra.repository.Query;
 import org.springframework.data.repository.Repository;
 
 public interface FlightRepo extends Repository<Flight, UUID> {
@@ -19,4 +20,7 @@ public interface FlightRepo extends Repository<Flight, UUID> {
 	void deleteById(UUID flightId);
 
 	boolean existsById(UUID primaryKey);
+
+	@Query(value = "TRUNCATE flight")
+	void deleteAll();
 }
