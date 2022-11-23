@@ -2,10 +2,10 @@ package com.bhatman.poc.astra;
 
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.METRICS_NODE_ENABLED;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.METRICS_SESSION_ENABLED;
-import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_POLICY_CLASS;
-import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_MAX;
-import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_DELAY;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_DELAY;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_MAX;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_POLICY_CLASS;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -23,10 +23,9 @@ import org.springframework.web.client.RestTemplate;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.internal.core.specex.ConstantSpeculativeExecutionPolicy;
 
 @SpringBootApplication
-@EnableConfigurationProperties({AstraConfig.class, AstraConfigLocal.class})
+@EnableConfigurationProperties({ AstraConfig.class, AstraConfigLocal.class })
 public class AstraAALPocApplication {
 
 	public static void main(String[] args) {
@@ -50,40 +49,34 @@ public class AstraAALPocApplication {
 
 	@Bean
 	@Profile("local")
-    DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(AstraConfigLocal cassandraProperties) {
-        return builder -> {
+	DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(AstraConfigLocal cassandraProperties) {
+		return builder -> {
 //            builder.withBoolean(REQUEST_DEFAULT_IDEMPOTENCE, true);
 //        	builder.withClass(SPECULATIVE_EXECUTION_POLICY_CLASS, ConstantSpeculativeExecutionPolicy.class);
 //        	builder.withInt(SPECULATIVE_EXECUTION_MAX, 3);
 //        	builder.withDuration(SPECULATIVE_EXECUTION_DELAY, Duration.ofMillis(1));
-        	builder.withString(REQUEST_DEFAULT_IDEMPOTENCE, "true");
-        	builder.withString(SPECULATIVE_EXECUTION_POLICY_CLASS, "ConstantSpeculativeExecutionPolicy");
-        	builder.withString(SPECULATIVE_EXECUTION_MAX, "3");
-        	builder.withString(SPECULATIVE_EXECUTION_DELAY, "2 milliseconds");
-            
-        	builder.withStringList(METRICS_SESSION_ENABLED, cassandraProperties.getSessionMetrics());
-            builder.withStringList(METRICS_NODE_ENABLED, cassandraProperties.getNodeMetrics());
-        };
-    }
-	
+			builder.withString(REQUEST_DEFAULT_IDEMPOTENCE, "true");
+			builder.withString(SPECULATIVE_EXECUTION_POLICY_CLASS, "ConstantSpeculativeExecutionPolicy");
+			builder.withString(SPECULATIVE_EXECUTION_MAX, "3");
+			builder.withString(SPECULATIVE_EXECUTION_DELAY, "2 milliseconds");
+
+			builder.withStringList(METRICS_SESSION_ENABLED, cassandraProperties.getSessionMetrics());
+			builder.withStringList(METRICS_NODE_ENABLED, cassandraProperties.getNodeMetrics());
+		};
+	}
+
 	@Bean
 	@Profile("local")
 	public MetricRegistry getMetricsbean(CqlSession cqlSession) {
-		return cqlSession.getMetrics()
-			    .orElseThrow(() -> new IllegalStateException("Metrics are disabled"))
-			    .getRegistry();
+		return cqlSession.getMetrics().orElseThrow(() -> new IllegalStateException("Metrics are disabled"))
+				.getRegistry();
 	}
 
 	@Bean
 	@Profile("local")
 	public JmxReporter getJmxReporter(MetricRegistry registry) {
-		JmxReporter reporter =
-			    JmxReporter.forRegistry(registry)
-			        .inDomain("pravin.com.datastax.oss.driver")
-			        .build();
-			reporter.start();
-			return reporter;
+		JmxReporter reporter = JmxReporter.forRegistry(registry).inDomain("pravin.com.datastax.oss.driver").build();
+		reporter.start();
+		return reporter;
 	}
 }
-
-
