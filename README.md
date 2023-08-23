@@ -1,5 +1,5 @@
 # astra-aal-poc
-Astra POC for American Airlines
+Astra sample app with CRUD operations using Spring-Data
 
 This project is a reference implementation of Java Spring-Boot application that uses AstraDB (a Cassandra based SaaS DB Service) as its backend and auto-detects/respond to any possible AstraDB health issues. 
 
@@ -12,7 +12,7 @@ This project is a reference implementation of Java Spring-Boot application that 
 
 ### Tech Stack
 - Java 11
-- Spring Boot 2.6.x (Spring Framework + Spring Boot + Spring Data + Spring REST + Spring Profiles)
+- Spring Boot 2.7.x (Spring Framework + Spring Boot + Spring Data + Spring REST + Spring Profiles)
 - AstraDB (Cassandra)
 - Resilience4j (Circuit Breaker)
 - Maven (Build tool)
