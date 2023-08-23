@@ -144,6 +144,20 @@ public class FlightController {
 				HttpStatus.OK);
 
 	}
+	
+	@PutMapping("/bulk-put")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
+	public ResponseEntity<HttpStatus> updateBulk(@RequestBody List<Flight> updateFlights) {
+		Objects.requireNonNull(updateFlights);
+		updateFlights.stream().forEach(f -> {
+			ResponseEntity re = get(f.getFlightPk().getAirportId(), f.getFlightPk().getFlightId());
+			Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + f.getFlightPk().getFlightId());
+			flightAppend.updateWithAppendEntry(f).forEach(cqlSession::execute);
+			
+		});
+
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
 
 	@PutMapping("/{airportId}/{flightId}/event")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
