@@ -1,5 +1,7 @@
 package com.bhatman.poc.astra.flight;
 
+import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.cassandra.core.mapping.Column;
@@ -11,11 +13,14 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-@Table
+@Table(value = "flight")
 public class Flight {
 	@PrimaryKey(value = "flight_id")
 	private UUID flightId;
 
 	@Column(value = "flight_name")
 	private String flightName;
+	
+	@Column(value = "actual_event")
+	private Map<String, Instant> actualEvent;
 }

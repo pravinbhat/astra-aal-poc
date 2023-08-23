@@ -1,5 +1,7 @@
 package com.bhatman.poc.astra.flight;
 
+import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -7,7 +9,11 @@ import org.springframework.data.cassandra.repository.Query;
 import org.springframework.data.repository.Repository;
 
 public interface FlightRepo extends Repository<Flight, UUID> {
+	
 	<S extends Flight> S save(S entity);
+	
+	@Query("UPDATE flight SET flight_name = ?1, actual_event = actual_event + ?2 WHERE flight_id = ?0")
+    void appendToActualEvent(UUID flightId, String flightName, Map<String, Instant> eventMap);
 
 	Optional<Flight> findById(UUID primaryKey);
 
