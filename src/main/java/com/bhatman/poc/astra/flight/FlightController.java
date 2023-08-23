@@ -1,7 +1,6 @@
 package com.bhatman.poc.astra.flight;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -75,15 +74,16 @@ public class FlightController {
 	@PostMapping
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<FlightResponse> add(@RequestBody Flight newFlight) {
-		newFlight.setFlightId(Uuids.timeBased());
+		newFlight.getFlightPk().setFlightId(Uuids.timeBased());
 		Flight flight = flightRepo.save(newFlight);
 		return new ResponseEntity<>(new FlightResponse(flight, "Flight created!"), HttpStatus.CREATED);
 	}
 
-	@GetMapping("/{flightId}")
+	@GetMapping("/{airportId}/{flightId}")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
-	public ResponseEntity<FlightResponse> get(@PathVariable UUID flightId) {
-		Optional<Flight> flight = flightRepo.findById(flightId);
+	public ResponseEntity<FlightResponse> get(@PathVariable String airportId, @PathVariable UUID flightId) {
+		FlightPk fPk = new FlightPk(airportId, flightId);
+		Optional<Flight> flight = flightRepo.findById(fPk);
 
 		if (flight.isPresent()) {
 			return new ResponseEntity<>(new FlightResponse(flight.get(), "Flight found!"), HttpStatus.OK);
@@ -92,10 +92,11 @@ public class FlightController {
 		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
-	@PutMapping("/{flightId}")
+	@PutMapping("/{airportId}/{flightId}")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
-	public ResponseEntity<FlightResponse> update(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
-		Assert.isTrue(flightId.equals(updateFlight.getFlightId()),
+	public ResponseEntity<FlightResponse> update(@RequestBody Flight updateFlight, @PathVariable String airportId,
+			@PathVariable UUID flightId) {
+		Assert.isTrue(flightId.equals(updateFlight.getFlightPk().getFlightId()),
 				"Flight Id provided does not match the value in path");
 
 		Metadata metadata = cqlSession.getMetadata();
@@ -113,7 +114,7 @@ public class FlightController {
 		}
 
 		Objects.requireNonNull(updateFlight);
-		ResponseEntity re = get(flightId);
+		ResponseEntity re = get(airportId, flightId);
 		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
 
 		return new ResponseEntity<>(new FlightResponse(flightRepo.save(updateFlight), "Flight updated!"),
@@ -121,14 +122,15 @@ public class FlightController {
 
 	}
 
-	@PutMapping("/{flightId}/dao")
+	@PutMapping("/{airportId}/{flightId}/dao")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
-	public ResponseEntity<FlightResponse> updateDao(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
-		Assert.isTrue(flightId.equals(updateFlight.getFlightId()),
+	public ResponseEntity<FlightResponse> updateDao(@RequestBody Flight updateFlight, @PathVariable String airportId,
+			@PathVariable UUID flightId) {
+		Assert.isTrue(flightId.equals(updateFlight.getFlightPk().getFlightId()),
 				"Flight Id provided does not match the value in path");
 
 		Objects.requireNonNull(updateFlight);
-		ResponseEntity re = get(flightId);
+		ResponseEntity re = get(airportId, flightId);
 		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
 		FlightMapper mapper = new FlightMapperBuilder(cqlSession).build();
 //		FlightDAO flightDAO = mapper.flightDao();
@@ -136,16 +138,18 @@ public class FlightController {
 //				updateFlight.getActualEvent()));
 
 		flightAppend.updateWithAppendEntry(updateFlight).forEach(cqlSession::execute);
+		FlightPk fPk = new FlightPk(airportId, flightId);
 
-		return new ResponseEntity<>(new FlightResponse(flightRepo.findById(flightId).get(), "Flight updated via DAO!"),
+		return new ResponseEntity<>(new FlightResponse(flightRepo.findById(fPk).get(), "Flight updated via DAO!"),
 				HttpStatus.OK);
 
 	}
 
-	@PutMapping("/{flightId}/event")
+	@PutMapping("/{airportId}/{flightId}/event")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
-	public ResponseEntity<FlightResponse> updateMap(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
-		Assert.isTrue(flightId.equals(updateFlight.getFlightId()),
+	public ResponseEntity<FlightResponse> updateMap(@RequestBody Flight updateFlight, @PathVariable String airportId,
+			@PathVariable UUID flightId) {
+		Assert.isTrue(flightId.equals(updateFlight.getFlightPk().getFlightId()),
 				"Flight Id provided does not match the value in path");
 
 		Metadata metadata = cqlSession.getMetadata();
@@ -163,12 +167,13 @@ public class FlightController {
 		}
 
 		Objects.requireNonNull(updateFlight);
-		ResponseEntity<FlightResponse> re = get(flightId);
+		ResponseEntity re = get(airportId, flightId);
 		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
-		flightRepo.appendToActualEvent(updateFlight.getFlightId(), updateFlight.getFlightName(),
+		FlightPk fPk = new FlightPk(airportId, flightId);
+		flightRepo.appendToActualEvent(fPk.getAirportId(), fPk.getFlightId(), updateFlight.getFlightName(),
 				updateFlight.getFlightDetails(), updateFlight.getActualEvent());
 
-		return new ResponseEntity<>(new FlightResponse(flightRepo.findById(flightId).get(), "Flight event appended!"),
+		return new ResponseEntity<>(new FlightResponse(flightRepo.findById(fPk).get(), "Flight event appended!"),
 				HttpStatus.OK);
 	}
 
@@ -180,10 +185,12 @@ public class FlightController {
 		return new ResponseEntity<>(new FlightResponse(null, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
-	@DeleteMapping("/{flightId}")
+	@DeleteMapping("/{airportId}/{flightId}")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorHttpStatus")
-	public ResponseEntity<HttpStatus> delete(@PathVariable UUID flightId) {
-		flightRepo.deleteById(flightId);
+	public ResponseEntity<HttpStatus> delete(@PathVariable String airportId, @PathVariable UUID flightId) {
+		FlightPk fPk = new FlightPk(airportId, flightId);
+		flightRepo.deleteById(fPk);
+
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 

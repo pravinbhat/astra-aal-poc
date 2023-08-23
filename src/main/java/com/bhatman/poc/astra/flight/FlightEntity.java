@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+import com.datastax.oss.driver.api.mapper.annotations.ClusteringColumn;
 import com.datastax.oss.driver.api.mapper.annotations.CqlName;
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
@@ -19,6 +20,10 @@ import lombok.NoArgsConstructor;
 @CqlName("flight")
 public class FlightEntity {
 	@PartitionKey
+	@CqlName("airport_id")
+	private UUID airportId;
+
+	@ClusteringColumn
 	@CqlName("flight_id")
 	private UUID flightId;
 

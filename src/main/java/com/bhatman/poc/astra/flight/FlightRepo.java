@@ -8,14 +8,16 @@ import java.util.UUID;
 import org.springframework.data.cassandra.repository.Query;
 import org.springframework.data.repository.Repository;
 
-public interface FlightRepo extends Repository<Flight, UUID> {
+public interface FlightRepo extends Repository<Flight, FlightPk> {
 
 	<S extends Flight> S save(S entity);
 
-	@Query("UPDATE flight SET flight_name = ?1, flight_details = ?2, actual_event = actual_event + ?3 WHERE flight_id = ?0")
-	void appendToActualEvent(UUID flightId, String flightName, String flightDetails, Map<String, Instant> eventMap);
+	@Query("UPDATE flight SET flight_name = ?2, flight_details = ?3, actual_event = actual_event + ?4 "
+			+ "WHERE airport_id = ?0 and flight_id = ?1")
+	void appendToActualEvent(String airportId, UUID flightId, String flightName, String flightDetails,
+			Map<String, Instant> eventMap);
 
-	Optional<Flight> findById(UUID primaryKey);
+	Optional<Flight> findById(FlightPk flightPk);
 
 	Iterable<Flight> findAll();
 
@@ -23,9 +25,9 @@ public interface FlightRepo extends Repository<Flight, UUID> {
 
 	void delete(Flight entity);
 
-	void deleteById(UUID flightId);
+	void deleteById(FlightPk flightPk);
 
-	boolean existsById(UUID primaryKey);
+	boolean existsById(FlightPk flightPk);
 
 	@Query(value = "TRUNCATE flight")
 	void deleteAll();

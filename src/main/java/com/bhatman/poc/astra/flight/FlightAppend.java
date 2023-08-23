@@ -19,9 +19,9 @@ public class FlightAppend {
 		return flight.getActualEvent().entrySet().stream().map(entry -> {
 			return update.appendMapEntry("actual_event", literal(entry.getKey()), literal(entry.getValue()))
 					.setColumn("flight_name", literal(flight.getFlightName()))
-					.setColumn("flight_details", literal(flight.getFlightDetails()))
-					.whereColumn("flight_id")
-					.isEqualTo(literal(flight.getFlightId())).build();
+					.setColumn("flight_details", literal(flight.getFlightDetails())).whereColumn("airport_id")
+					.isEqualTo(literal(flight.getFlightPk().getAirportId())).whereColumn("flight_id")
+					.isEqualTo(literal(flight.getFlightPk().getFlightId())).build();
 		}).collect(Collectors.toList());
 	}
 
