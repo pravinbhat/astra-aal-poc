@@ -24,7 +24,10 @@ public class FlightEntity {
 
 	@CqlName("flight_name")
 	private String flightName;
-	
+
+	@CqlName("flight_details")
+	private String flightDetails;
+
 	@CqlName("actual_event")
 	private Map<String, Instant> actualEvent;
 }

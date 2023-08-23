@@ -7,5 +7,5 @@ import com.datastax.oss.driver.api.mapper.annotations.Update;
 public interface FlightDAO {
 
 	@Update
-    void update(FlightEntity flight);
+	void update(FlightEntity flight);
 }

@@ -82,7 +82,7 @@ public class HealthCheck {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 			headers.setBearerAuth(astraToken);
-			entity = new HttpEntity<String>(headers);
+			entity = new HttpEntity<>(headers);
 		}
 
 		return entity;

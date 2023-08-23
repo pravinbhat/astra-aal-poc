@@ -20,7 +20,10 @@ public class Flight {
 
 	@Column(value = "flight_name")
 	private String flightName;
-	
+
+	@Column(value = "flight_details")
+	private String flightDetails;
+
 	@Column(value = "actual_event")
 	private Map<String, Instant> actualEvent;
 }

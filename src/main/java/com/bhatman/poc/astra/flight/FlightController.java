@@ -44,18 +44,17 @@ public class FlightController {
 
 	@Autowired
 	FlightRepo flightRepo;
-	
+
 	@Autowired
 	FlightAppend flightAppend;
 
 	@Autowired
 	CqlSession cqlSession;
-	
 
 	@GetMapping
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorAllFlights")
 	public ResponseEntity<List<Flight>> all() throws Exception {
-		List<Flight> flights = new ArrayList<Flight>();
+		List<Flight> flights = new ArrayList<>();
 		flightRepo.findAll().forEach(flights::add);
 
 		if (flights.isEmpty()) {
@@ -76,7 +75,8 @@ public class FlightController {
 	@PostMapping
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<FlightResponse> add(@RequestBody Flight newFlight) {
-		Flight flight = flightRepo.save(new Flight(Uuids.timeBased(), newFlight.getFlightName(), new HashMap<>()));
+		newFlight.setFlightId(Uuids.timeBased());
+		Flight flight = flightRepo.save(newFlight);
 		return new ResponseEntity<>(new FlightResponse(flight, "Flight created!"), HttpStatus.CREATED);
 	}
 
@@ -97,21 +97,21 @@ public class FlightController {
 	public ResponseEntity<FlightResponse> update(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
 		Assert.isTrue(flightId.equals(updateFlight.getFlightId()),
 				"Flight Id provided does not match the value in path");
-		
+
 		Metadata metadata = cqlSession.getMetadata();
 
 		Optional<TokenMap> optionalTokenMap = metadata.getTokenMap();
 
 		if (optionalTokenMap.isPresent()) {
-		    TokenMap tokenMap = optionalTokenMap.get();
-		    for (Node node : metadata.getNodes().values()) {
-		        Set<TokenRange> ranges = tokenMap.getTokenRanges(node);
-		        System.out.println("Node: " + node.getEndPoint() + " has token ranges: " + ranges);
-		    }
+			TokenMap tokenMap = optionalTokenMap.get();
+			for (Node node : metadata.getNodes().values()) {
+				Set<TokenRange> ranges = tokenMap.getTokenRanges(node);
+				System.out.println("Node: " + node.getEndPoint() + " has token ranges: " + ranges);
+			}
 		} else {
-		    System.out.println("Token map is not available.");
+			System.out.println("Token map is not available.");
 		}
-		
+
 		Objects.requireNonNull(updateFlight);
 		ResponseEntity re = get(flightId);
 		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
@@ -120,54 +120,56 @@ public class FlightController {
 				HttpStatus.OK);
 
 	}
-	
+
 	@PutMapping("/{flightId}/dao")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<FlightResponse> updateDao(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
 		Assert.isTrue(flightId.equals(updateFlight.getFlightId()),
 				"Flight Id provided does not match the value in path");
-								
+
 		Objects.requireNonNull(updateFlight);
 		ResponseEntity re = get(flightId);
 		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
 		FlightMapper mapper = new FlightMapperBuilder(cqlSession).build();
 //		FlightDAO flightDAO = mapper.flightDao();
-//		flightDAO.update(new Flight(updateFlight.getFlightId(), updateFlight.getFlightName(), 
+//		flightDAO.update(new Flight(updateFlight.getFlightId(), updateFlight.getFlightName(),
 //				updateFlight.getActualEvent()));
-		
+
 		flightAppend.updateWithAppendEntry(updateFlight).forEach(cqlSession::execute);
 
 		return new ResponseEntity<>(new FlightResponse(flightRepo.findById(flightId).get(), "Flight updated via DAO!"),
 				HttpStatus.OK);
 
 	}
-	
+
 	@PutMapping("/{flightId}/event")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<FlightResponse> updateMap(@RequestBody Flight updateFlight, @PathVariable UUID flightId) {
 		Assert.isTrue(flightId.equals(updateFlight.getFlightId()),
 				"Flight Id provided does not match the value in path");
-		
+
 		Metadata metadata = cqlSession.getMetadata();
 
 		Optional<TokenMap> optionalTokenMap = metadata.getTokenMap();
 
 		if (optionalTokenMap.isPresent()) {
-		    TokenMap tokenMap = optionalTokenMap.get();
-		    for (Node node : metadata.getNodes().values()) {
-		        Set<TokenRange> ranges = tokenMap.getTokenRanges(node);
-		        System.out.println("Node: " + node.getEndPoint() + " has token ranges: " + ranges);
-		    }
+			TokenMap tokenMap = optionalTokenMap.get();
+			for (Node node : metadata.getNodes().values()) {
+				Set<TokenRange> ranges = tokenMap.getTokenRanges(node);
+				System.out.println("Node: " + node.getEndPoint() + " has token ranges: " + ranges);
+			}
 		} else {
-		    System.out.println("Token map is not available.");
+			System.out.println("Token map is not available.");
 		}
-		
+
 		Objects.requireNonNull(updateFlight);
 		ResponseEntity<FlightResponse> re = get(flightId);
 		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
-		flightRepo.appendToActualEvent(updateFlight.getFlightId(), updateFlight.getFlightName(), updateFlight.getActualEvent());
+		flightRepo.appendToActualEvent(updateFlight.getFlightId(), updateFlight.getFlightName(),
+				updateFlight.getFlightDetails(), updateFlight.getActualEvent());
 
-		return new ResponseEntity<>(new FlightResponse(flightRepo.findById(flightId).get(), "Flight event appended!"), HttpStatus.OK);
+		return new ResponseEntity<>(new FlightResponse(flightRepo.findById(flightId).get(), "Flight event appended!"),
+				HttpStatus.OK);
 	}
 
 	public ResponseEntity<FlightResponse> healthErrorOneFlight(Exception e) {
