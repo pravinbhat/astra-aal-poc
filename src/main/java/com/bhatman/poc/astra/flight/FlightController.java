@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bhatman.poc.astra.health.HealthCheck;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BatchStatement;
+import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
+import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.metadata.Metadata;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.api.core.metadata.TokenMap;
@@ -144,17 +147,34 @@ public class FlightController {
 				HttpStatus.OK);
 
 	}
-	
+
 	@PutMapping("/bulk-put")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<HttpStatus> updateBulk(@RequestBody List<Flight> updateFlights) {
 		Objects.requireNonNull(updateFlights);
 		updateFlights.stream().forEach(f -> {
 			ResponseEntity re = get(f.getFlightPk().getAirportId(), f.getFlightPk().getFlightId());
-			Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + f.getFlightPk().getFlightId());
+			Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK),
+					"No such Flight exists for Id " + f.getFlightPk().getFlightId());
 			flightAppend.updateWithAppendEntry(f).forEach(cqlSession::execute);
-			
 		});
+
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+
+	@PutMapping("/batch-put")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
+	public ResponseEntity<HttpStatus> updateBatch(@RequestBody List<Flight> updateFlights) {
+		Objects.requireNonNull(updateFlights);
+		BatchStatementBuilder batchBldr = BatchStatement.builder(BatchType.LOGGED);
+		updateFlights.forEach(f -> {
+			ResponseEntity re = get(f.getFlightPk().getAirportId(), f.getFlightPk().getFlightId());
+			Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK),
+					"No such Flight exists for Id " + f.getFlightPk().getFlightId());
+			flightAppend.updateWithAppendEntry(f).forEach(batchBldr::addStatement);
+		});
+
+		cqlSession.execute(batchBldr.build());
 
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
