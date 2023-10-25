@@ -117,7 +117,7 @@ public class FlightController {
 		}
 
 		Objects.requireNonNull(updateFlight);
-		ResponseEntity re = get(airportId, flightId);
+		ResponseEntity<FlightResponse> re = get(airportId, flightId);
 		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
 
 		return new ResponseEntity<>(new FlightResponse(flightRepo.save(updateFlight), "Flight updated!"),
@@ -133,9 +133,9 @@ public class FlightController {
 				"Flight Id provided does not match the value in path");
 
 		Objects.requireNonNull(updateFlight);
-		ResponseEntity re = get(airportId, flightId);
+		ResponseEntity<FlightResponse> re = get(airportId, flightId);
 		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
-		FlightMapper mapper = new FlightMapperBuilder(cqlSession).build();
+//		FlightMapper mapper = new FlightMapperBuilder(cqlSession).build();
 //		FlightDAO flightDAO = mapper.flightDao();
 //		flightDAO.update(new Flight(updateFlight.getFlightId(), updateFlight.getFlightName(),
 //				updateFlight.getActualEvent()));
@@ -153,7 +153,7 @@ public class FlightController {
 	public ResponseEntity<HttpStatus> updateBulk(@RequestBody List<Flight> updateFlights) {
 		Objects.requireNonNull(updateFlights);
 		updateFlights.stream().forEach(f -> {
-			ResponseEntity re = get(f.getFlightPk().getAirportId(), f.getFlightPk().getFlightId());
+			ResponseEntity<FlightResponse> re = get(f.getFlightPk().getAirportId(), f.getFlightPk().getFlightId());
 			Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK),
 					"No such Flight exists for Id " + f.getFlightPk().getFlightId());
 			flightAppend.updateWithAppendEntry(f).forEach(cqlSession::execute);
@@ -168,7 +168,24 @@ public class FlightController {
 		Objects.requireNonNull(updateFlights);
 		BatchStatementBuilder batchBldr = BatchStatement.builder(BatchType.LOGGED);
 		updateFlights.forEach(f -> {
-			ResponseEntity re = get(f.getFlightPk().getAirportId(), f.getFlightPk().getFlightId());
+			ResponseEntity<FlightResponse> re = get(f.getFlightPk().getAirportId(), f.getFlightPk().getFlightId());
+			Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK),
+					"No such Flight exists for Id " + f.getFlightPk().getFlightId());
+			flightAppend.updateWithAppendEntry(f).forEach(batchBldr::addStatement);
+		});
+
+		cqlSession.execute(batchBldr.build());
+
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+
+	@PutMapping("/unlogged-batch-put")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
+	public ResponseEntity<HttpStatus> updateUnloggedBatch(@RequestBody List<Flight> updateFlights) {
+		Objects.requireNonNull(updateFlights);
+		BatchStatementBuilder batchBldr = BatchStatement.builder(BatchType.UNLOGGED);
+		updateFlights.forEach(f -> {
+			ResponseEntity<FlightResponse> re = get(f.getFlightPk().getAirportId(), f.getFlightPk().getFlightId());
 			Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK),
 					"No such Flight exists for Id " + f.getFlightPk().getFlightId());
 			flightAppend.updateWithAppendEntry(f).forEach(batchBldr::addStatement);
@@ -201,7 +218,7 @@ public class FlightController {
 		}
 
 		Objects.requireNonNull(updateFlight);
-		ResponseEntity re = get(airportId, flightId);
+		ResponseEntity<FlightResponse> re = get(airportId, flightId);
 		Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Flight exists for Id " + flightId);
 		FlightPk fPk = new FlightPk(airportId, flightId);
 		flightRepo.appendToActualEvent(fPk.getAirportId(), fPk.getFlightId(), updateFlight.getFlightName(),

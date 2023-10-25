@@ -2,6 +2,8 @@ package com.bhatman.poc.astra;
 
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.METRICS_NODE_ENABLED;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.METRICS_SESSION_ENABLED;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SESSION_NAME;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_CONSISTENCY;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_DELAY;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_MAX;
@@ -39,7 +41,19 @@ public class AstraAALPocApplication {
 	@Profile("!local")
 	public CqlSessionBuilderCustomizer sessionBuilderCustomizer(AstraConfig astraProperties) {
 		Path bundle = astraProperties.getSecureConnectBundle().toPath();
-		return builder -> builder.withCloudSecureConnectBundle(bundle);
+		return builder -> {
+			builder.withCloudSecureConnectBundle(bundle);
+		};
+	}
+
+	@Bean
+	@Profile("!local")
+	DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(AstraConfig astraProperties) {
+		return builder -> {
+			builder.withStringList(METRICS_SESSION_ENABLED, astraProperties.getSessionMetrics());
+			builder.withStringList(METRICS_NODE_ENABLED, astraProperties.getNodeMetrics());
+			builder.withString(SESSION_NAME, "bhatman");
+		};
 	}
 
 	@Bean
@@ -51,11 +65,13 @@ public class AstraAALPocApplication {
 	@Profile("local")
 	DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(AstraConfigLocal cassandraProperties) {
 		return builder -> {
-//            builder.withBoolean(REQUEST_DEFAULT_IDEMPOTENCE, true);
+//          builder.withBoolean(REQUEST_DEFAULT_IDEMPOTENCE, true);
 //        	builder.withClass(SPECULATIVE_EXECUTION_POLICY_CLASS, ConstantSpeculativeExecutionPolicy.class);
 //        	builder.withInt(SPECULATIVE_EXECUTION_MAX, 3);
 //        	builder.withDuration(SPECULATIVE_EXECUTION_DELAY, Duration.ofMillis(1));
-			builder.withString(REQUEST_DEFAULT_IDEMPOTENCE, "true");
+			builder.withString(REQUEST_CONSISTENCY, "LOCAL_QUORUM");
+
+            builder.withString(REQUEST_DEFAULT_IDEMPOTENCE, "true");
 			builder.withString(SPECULATIVE_EXECUTION_POLICY_CLASS, "ConstantSpeculativeExecutionPolicy");
 			builder.withString(SPECULATIVE_EXECUTION_MAX, "3");
 			builder.withString(SPECULATIVE_EXECUTION_DELAY, "2 milliseconds");
@@ -66,16 +82,14 @@ public class AstraAALPocApplication {
 	}
 
 	@Bean
-	@Profile("local")
 	public MetricRegistry getMetricsbean(CqlSession cqlSession) {
 		return cqlSession.getMetrics().orElseThrow(() -> new IllegalStateException("Metrics are disabled"))
 				.getRegistry();
 	}
 
 	@Bean
-	@Profile("local")
 	public JmxReporter getJmxReporter(MetricRegistry registry) {
-		JmxReporter reporter = JmxReporter.forRegistry(registry).inDomain("pravin.com.datastax.oss.driver").build();
+		JmxReporter reporter = JmxReporter.forRegistry(registry).inDomain("bhatman.driver.metrics").build();
 		reporter.start();
 		return reporter;
 	}

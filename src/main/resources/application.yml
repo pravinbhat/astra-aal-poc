@@ -16,7 +16,31 @@ spring:
 server.port: 8080
       
 datastax.astra:
-    secure-connect-bundle: secure-connect.zip
+  secure-connect-bundle: secure-connect.zip
+  session-metrics:
+    - bytes-sent
+    - bytes-received
+    - connected-nodes
+    - cql-requests
+    - cql-client-timeouts
+    - throttling.delay
+    - throttling.queue-size
+    - continuous-cql-requests
+  node-metrics:
+    - pool.open-connections
+    - pool.in-flight
+    - pool.available-streams
+    - bytes-sent
+    - bytes-received
+    - cql-messages
+    - errors.request.aborted
+    - errors.request.read-timeouts
+    - errors.request.write-timeouts
+    - errors.request.unavailables
+    - errors.request.others
+    - retries.total
+    - ignores.total
+    - speculative-executions
 
 astra.db:
   id: <db-id>
