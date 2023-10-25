@@ -31,8 +31,7 @@ public class MetricsController {
 
 	@GetMapping("/node")
 	public ResponseEntity<List<SMetric>> getNode() {
-		List<SMetric> vals = getMetrics().stream()
-				.filter(sm -> sm.getMetricName().contains(".nodes."))
+		List<SMetric> vals = getMetrics().stream().filter(sm -> sm.getMetricName().contains(".nodes."))
 				.collect(Collectors.toList());
 
 		return new ResponseEntity<>(vals, HttpStatus.OK);
@@ -40,16 +39,14 @@ public class MetricsController {
 
 	@GetMapping("/session")
 	public ResponseEntity<List<SMetric>> getSession() {
-		List<SMetric> vals = getMetrics().stream()
-				.filter(sm -> !sm.getMetricName().contains(".nodes."))
+		List<SMetric> vals = getMetrics().stream().filter(sm -> !sm.getMetricName().contains(".nodes."))
 				.collect(Collectors.toList());
 		return new ResponseEntity<>(vals, HttpStatus.OK);
 	}
-	
+
 	private List<SMetric> getMetrics() {
 		Map<String, Metric> metricsMap = registry.getMetrics();
-		return metricsMap.entrySet().stream()
-				.map(val -> new SMetric(val.getKey(), val.getValue()))
+		return metricsMap.entrySet().stream().map(val -> new SMetric(val.getKey(), val.getValue()))
 				.collect(Collectors.toList());
 	}
 

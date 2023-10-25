@@ -15,5 +15,5 @@ import lombok.Data;
 public class AstraConfig {
 	private File secureConnectBundle;
 	private List<String> sessionMetrics = new ArrayList<>();
-	private List<String> nodeMetrics = new ArrayList<>();	
+	private List<String> nodeMetrics = new ArrayList<>();
 }
