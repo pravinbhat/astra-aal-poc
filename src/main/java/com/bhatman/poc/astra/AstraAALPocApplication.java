@@ -4,6 +4,11 @@ import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.METRIC
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.METRICS_SESSION_ENABLED;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_CONSISTENCY;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_LOGGER_ERROR_ENABLED;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_LOGGER_SLOW_ENABLED;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_LOGGER_SLOW_THRESHOLD;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_LOGGER_SUCCESS_ENABLED;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_TRACKER_CLASSES;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SESSION_NAME;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_DELAY;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_MAX;
@@ -11,6 +16,7 @@ import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECUL
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,10 +31,12 @@ import org.springframework.web.client.RestTemplate;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.internal.core.tracker.RequestLogger;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ AstraConfig.class, AstraConfigLocal.class })
 public class AstraAALPocApplication {
+	private static final int SLOW_QUERY_DURATION = 100;
 
 	public static void main(String[] args) {
 		SpringApplication.run(AstraAALPocApplication.class, args);
@@ -53,6 +61,11 @@ public class AstraAALPocApplication {
 			builder.withStringList(METRICS_SESSION_ENABLED, astraProperties.getSessionMetrics());
 			builder.withStringList(METRICS_NODE_ENABLED, astraProperties.getNodeMetrics());
 			builder.withString(SESSION_NAME, "bhatman");
+			builder.withClassList(REQUEST_TRACKER_CLASSES, List.of(RequestLogger.class));
+			builder.withBoolean(REQUEST_LOGGER_SUCCESS_ENABLED, true);
+			builder.withBoolean(REQUEST_LOGGER_ERROR_ENABLED, true);
+			builder.withBoolean(REQUEST_LOGGER_SLOW_ENABLED, true);
+			builder.withDuration(REQUEST_LOGGER_SLOW_THRESHOLD, Duration.ofMillis(SLOW_QUERY_DURATION));
 		};
 	}
 
