@@ -8,6 +8,7 @@ import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUES
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_LOGGER_SLOW_ENABLED;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_LOGGER_SLOW_THRESHOLD;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_LOGGER_SUCCESS_ENABLED;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_LOGGER_VALUES;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.REQUEST_TRACKER_CLASSES;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SESSION_NAME;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_DELAY;
@@ -65,6 +66,7 @@ public class AstraAALPocApplication {
 			builder.withBoolean(REQUEST_LOGGER_SUCCESS_ENABLED, true);
 			builder.withBoolean(REQUEST_LOGGER_ERROR_ENABLED, true);
 			builder.withBoolean(REQUEST_LOGGER_SLOW_ENABLED, true);
+			builder.withBoolean(REQUEST_LOGGER_VALUES, true);
 			builder.withDuration(REQUEST_LOGGER_SLOW_THRESHOLD, Duration.ofMillis(SLOW_QUERY_DURATION));
 		};
 	}
