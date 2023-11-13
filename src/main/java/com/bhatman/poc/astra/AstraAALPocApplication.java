@@ -14,6 +14,7 @@ import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SESSIO
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_DELAY;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_MAX;
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.SPECULATIVE_EXECUTION_POLICY_CLASS;
+import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.PROTOCOL_COMPRESSION;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -68,6 +69,7 @@ public class AstraAALPocApplication {
 			builder.withBoolean(REQUEST_LOGGER_SLOW_ENABLED, true);
 			builder.withBoolean(REQUEST_LOGGER_VALUES, true);
 			builder.withDuration(REQUEST_LOGGER_SLOW_THRESHOLD, Duration.ofMillis(SLOW_QUERY_DURATION));
+			builder.withString(PROTOCOL_COMPRESSION, "lz4");
 		};
 	}
 
