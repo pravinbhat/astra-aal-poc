@@ -95,6 +95,39 @@ public class FlightController {
 		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
+	@GetMapping("/{airportId}")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
+	public ResponseEntity<List<Flight>> get(@PathVariable String airportId) {
+		List<Flight> flights = new ArrayList<>();
+		flightRepo.findByAirportId(airportId).forEach(flights::add);
+
+		if (flights.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		return new ResponseEntity<>(flights, HttpStatus.OK);
+	}
+	
+	@PostMapping("/{airportId}/{flightCount}")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
+	public ResponseEntity<FlightResponse> addFlights(@PathVariable String airportId, @PathVariable int flightCount) {
+		return addFlights(airportId, flightCount, 1);
+	}
+
+	@PostMapping("/{airportId}/{flightCount}/{startIndex}")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
+	public ResponseEntity<FlightResponse> addFlights(@PathVariable String airportId, @PathVariable int flightCount, @PathVariable int startIndex) {
+		List<Flight> flights = new ArrayList<>();
+		for (int i = startIndex; i < startIndex + flightCount; i++) {
+			Flight newFlight = new Flight(new FlightPk(airportId, null), airportId + "-flight-" + i, "This is flight number " + i + " from airport. Hope to see you soon!" + airportId, null);
+			newFlight.getFlightPk().setFlightId(Uuids.timeBased());
+			flights.add(newFlight);
+		}
+		flightRepo.saveAll(flights);
+
+		return new ResponseEntity<>(new FlightResponse(null, flightCount + " flights created!"), HttpStatus.CREATED);
+	}
+	
 	@PutMapping("/{airportId}/{flightId}")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<FlightResponse> update(@RequestBody Flight updateFlight, @PathVariable String airportId,

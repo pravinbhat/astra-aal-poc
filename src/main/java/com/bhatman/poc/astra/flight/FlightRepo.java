@@ -11,6 +11,8 @@ import org.springframework.data.repository.Repository;
 public interface FlightRepo extends Repository<Flight, FlightPk> {
 
 	<S extends Flight> S save(S entity);
+	
+	<S extends Flight> Iterable<S> saveAll(Iterable<S> entities);
 
 	@Query("UPDATE flight SET flight_name = ?2, flight_details = ?3, actual_event = actual_event + ?4 "
 			+ "WHERE airport_id = ?0 and flight_id = ?1")
@@ -31,4 +33,7 @@ public interface FlightRepo extends Repository<Flight, FlightPk> {
 
 	@Query(value = "TRUNCATE flight")
 	void deleteAll();
+
+	@Query("select * from flight where airport_id = ?0")
+	Iterable<Flight> findByAirportId(String airportId);
 }
