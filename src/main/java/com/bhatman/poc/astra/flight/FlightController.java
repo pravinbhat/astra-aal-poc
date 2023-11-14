@@ -1,6 +1,7 @@
 package com.bhatman.poc.astra.flight;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,6 +47,9 @@ public class FlightController {
 
 	@Autowired
 	FlightRepo flightRepo;
+	
+	@Autowired
+	AirportRepo airportRepo;
 
 	@Autowired
 	FlightAppend flightAppend;
@@ -95,6 +99,18 @@ public class FlightController {
 		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
+	@GetMapping("/xref/{airport}")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
+	public ResponseEntity<Airport> getAirportXref(@PathVariable String airport) {
+		Optional<Airport> airportObj = airportRepo.findById(airport);
+
+		if (airportObj.isPresent()) {
+			return new ResponseEntity<>(airportObj.get(), HttpStatus.OK);
+		}
+
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+	}
+
 	@GetMapping("/{airportId}")
 	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
 	public ResponseEntity<List<Flight>> get(@PathVariable String airportId) {
@@ -126,6 +142,24 @@ public class FlightController {
 		flightRepo.saveAll(flights);
 
 		return new ResponseEntity<>(new FlightResponse(null, flightCount + " flights created!"), HttpStatus.CREATED);
+	}
+	
+	@PostMapping("/airports")
+	@CircuitBreaker(name = Flight_CircuitBreaker, fallbackMethod = "healthErrorOneFlight")
+	public ResponseEntity<List<Flight>> flightXRef(@RequestBody String airports) {
+		List<Flight> allFlights = new ArrayList<>();
+		List<String> airportList = Arrays.asList(airports.split(","));
+		airportList.parallelStream().forEach(a -> {
+			Optional<Airport> airportObj = airportRepo.findById(a);
+			List<Flight> flights = get(airportObj.get().getAirportId()).getBody();
+			allFlights.addAll(flights);
+		});
+
+		if (allFlights.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		return new ResponseEntity<>(allFlights, HttpStatus.OK);
 	}
 	
 	@PutMapping("/{airportId}/{flightId}")
