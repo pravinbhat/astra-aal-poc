@@ -10,6 +10,9 @@
         <appender-ref ref="STDOUT" />
     </logger>
 
+	<logger name="com.datastax.oss.driver.internal.core.cql.CqlRequestHandler" level="TRACE"/>
+	<logger name="com.datastax.oss.driver.internal.core.channel.InFlightHandler" level="TRACE"/>
+
     <logger name="com.datastax.oss.driver" level="INFO" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
