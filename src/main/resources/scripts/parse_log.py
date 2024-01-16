@@ -1,9 +1,13 @@
 import re
 from collections import defaultdict
-import time
 import datetime
+import sys
 
-log_file_path = 'log.txt'  # replace with the actual path to your log file
+# take file path as an input
+if len(sys.argv) < 2:
+    log_file_path = input("Enter the path to the log file: ")
+else:
+    log_file_path = sys.argv[1]
 
 log_data = defaultdict(dict) # {request_id:{event_type:timestamp, duration:duration}}
 
@@ -16,6 +20,7 @@ with open(log_file_path, 'r') as file:
         match = pattern.match(line)
         if match:
             timestamp, _, logger, request_id, remained = match.groups()
+            # print("timestamp, _, logger, request_id, remained:", timestamp, _, logger, request_id)
 
             if "Creating new handler for request" in remained:
                 event_type = "start"
@@ -26,7 +31,8 @@ with open(log_file_path, 'r') as file:
             elif "RequestLogger" in logger:
                 if "SELECT * FROM airport WHERE airport=? LIMIT 1 [airport='NY-London']" not in remained:
                     # not interested, ignore
-                    del log_data[request_id]
+                    if request_id in log_data:
+                        del log_data[request_id]
                     continue
                 duration_match = duration_pattern.match(remained)
                 if not duration_match:
@@ -51,13 +57,14 @@ def str_to_milliseconds(timestamp):
     return (dt.second + dt.microsecond/1000000)*1000
 
 # Print the result
-print("requests_id,start,sent,got,duration,queue")
 avg_time_queued = 0
 for request_id in log_data.keys():
-    time_queued = str_to_milliseconds(log_data[request_id]['sent']) - str_to_milliseconds(log_data[request_id]['start'])
-    avg_time_queued += time_queued
-    if time_queued > 3:
-        print(f"{request_id},{log_data[request_id]['start']},{log_data[request_id]['sent']},{log_data[request_id]['got']},{log_data[request_id]['duration']},{time_queued}")
+    if 'sent' in log_data[request_id] and 'start' in log_data[request_id]:
+        time_queued = str_to_milliseconds(log_data[request_id]['sent']) - str_to_milliseconds(log_data[request_id]['start'])
+        avg_time_queued += time_queued
+        if time_queued > 3:
+            print(f"{request_id},{log_data[request_id]['start']},{log_data[request_id]['sent']},{log_data[request_id]['got']},{log_data[request_id]['duration']},{time_queued}")
 
-avg_time_queued /= len(log_data)
-print(f"Average time queued: {avg_time_queued} ms")
+if avg_time_queued > 0:
+    avg_time_queued /= len(log_data)
+print(f"Requests analyzed: {len(log_data)}, Average time queued: {avg_time_queued} ms")
