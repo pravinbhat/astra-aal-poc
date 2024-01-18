@@ -69,7 +69,7 @@ print("=========================================================================
 avg_time_queued = 0
 queued_count = 0
 for request_id in log_data.keys():
-    if 'sent' in log_data[request_id] and 'start' in log_data[request_id]:
+    if 'sent' in log_data[request_id] and 'start' in log_data[request_id] and 'got' in log_data[request_id] and 'duration' in log_data[request_id]:
         time_queued = str_to_milliseconds(log_data[request_id]['sent']) - str_to_milliseconds(log_data[request_id]['start'])
         if 'query' in log_data[request_id]:
             qry = log_data[request_id]['query']
