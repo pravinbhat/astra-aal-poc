@@ -9,7 +9,7 @@ if len(sys.argv) < 2:
 else:
     log_file_path = sys.argv[1]
 
-queue_time_over_millis = 5 # Change this based in your threshold
+queue_time_over_millis = 3 # Change this based in your threshold
 log_data = defaultdict(dict) # {request_id:{event_type:timestamp, duration:duration}}
 query_data = defaultdict(dict) # {query:{calls:count, queued_calls:count, duration:duration_in_ms}}
 
@@ -103,7 +103,7 @@ print(f"{len(log_data)}, {queued_count}, {avg_time_queued} ms")
 print("=======================================================================================================")
 
 print("\n=========================================== Results by Query ==========================================")
-print("Query, Total requests,Queued requests,Average time queued")
+print(f"Query, Total requests, Queued requests(over {queue_time_over_millis} ms), Average time queued")
 print("=======================================================================================================")
 for qry in query_data.keys():
     if query_data[qry]['queued_calls'] > 0:
