@@ -9,12 +9,13 @@ if len(sys.argv) < 2:
 else:
     log_file_path = sys.argv[1]
 
-queue_time_over_millis = 5
+queue_time_over_millis = 5 # Change this based in your threshold
 log_data = defaultdict(dict) # {request_id:{event_type:timestamp, duration:duration}}
+query_data = defaultdict(dict) # {query:{calls:count, queued_calls:count, duration:duration_in_ms}}
 
 # Regular expression pattern to extract relevant information
 pattern = re.compile(r'(\d+:\d+:\d+\.\d+)\s*(.*?)\s*com\.datastax\.oss\.driver\.internal\.core.(.*?)\s*:\s*\[.*?\|(\d+).*?](.*)')
-duration_pattern = re.compile(r'\[(.*?)\].*?\((.*?) ms\).*?(select .*?)\[', re.IGNORECASE)
+duration_pattern =        re.compile(r'\[(.*?)\].*?\((.*?) ms\).*?(select .*?)\[', re.IGNORECASE)
 duration_pattern_second = re.compile(r'\[(.*?)\].*?\((.*?) s\).*?(select .*?)\[', re.IGNORECASE)
 
 with open(log_file_path, 'r') as file:
@@ -45,7 +46,7 @@ with open(log_file_path, 'r') as file:
                         log_data[request_id]["duration"] = 'NA'
                     else:
                         _, duration, query = duration_match.groups()
-                        log_data[request_id]["duration"] = duration * 1000
+                        log_data[request_id]["duration"] = float(duration) * 1000
                         log_data[request_id]["query"] = query
                 else:
                     _, duration, query = duration_match.groups()
@@ -62,17 +63,45 @@ def str_to_milliseconds(timestamp):
     return (dt.second + dt.microsecond/1000000)*1000
 
 # Print the result
+print("=======================================================================================================")
 print("requests_id,start,sent,got,duration,queue,query")
+print("=======================================================================================================")
 avg_time_queued = 0
 queued_count = 0
 for request_id in log_data.keys():
     if 'sent' in log_data[request_id] and 'start' in log_data[request_id]:
         time_queued = str_to_milliseconds(log_data[request_id]['sent']) - str_to_milliseconds(log_data[request_id]['start'])
+        qry = log_data[request_id]['query']
         if time_queued > queue_time_over_millis:
             queued_count += 1
             print(f"{request_id},{log_data[request_id]['start']},{log_data[request_id]['sent']},{log_data[request_id]['got']},{log_data[request_id]['duration']},{time_queued},{log_data[request_id]['query']}")
             avg_time_queued += time_queued
+            if qry not in query_data:
+                query_data[qry]['calls'] = 1
+                query_data[qry]['queued_calls'] = 1
+                query_data[qry]['duration'] = time_queued
+            else:
+                query_data[qry]['calls'] += 1
+                query_data[qry]['queued_calls'] += 1
+                query_data[qry]['duration'] += time_queued
+        else:
+            if qry not in query_data:
+                query_data[qry]['calls'] = 1
+                query_data[qry]['queued_calls'] = 0
+                query_data[qry]['duration'] = 0
+            else:
+                query_data[qry]['calls'] += 1
+print("=======================================================================================================")
 
+print("\n=============================================== Results ===============================================")
 if avg_time_queued > 0:
     avg_time_queued /= queued_count
 print(f"Requests analyzed: {len(log_data)}, Total Queued requests (over {queue_time_over_millis} ms): {queued_count}, Average time queued: {avg_time_queued} ms")
+print("=======================================================================================================")
+
+print("\n============================================ Query Results ============================================")
+for qry in query_data.keys():
+    print(query_data[qry])
+    avg_time_queued = query_data[qry]['duration'] / query_data[qry]['queued_calls']
+    print(f"Query: {qry}, Total calls: {query_data[qry]['calls']}, Queued calls: {query_data[qry]['queued_calls']}, Average time queued: {avg_time_queued} ms")
+print("=======================================================================================================")
