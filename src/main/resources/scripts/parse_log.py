@@ -63,18 +63,19 @@ def str_to_milliseconds(timestamp):
     return (dt.second + dt.microsecond/1000000)*1000
 
 # Print the result
-print("=======================================================================================================")
-print("requests_id,start,sent,got,duration,queue,query")
+print("============================================ Queued Requests ==========================================")
+print("Request Id, Start time, Sent time, Response received time, Duration (ms), Queue (ms), Query")
 print("=======================================================================================================")
 avg_time_queued = 0
 queued_count = 0
 for request_id in log_data.keys():
     if 'sent' in log_data[request_id] and 'start' in log_data[request_id]:
         time_queued = str_to_milliseconds(log_data[request_id]['sent']) - str_to_milliseconds(log_data[request_id]['start'])
-        qry = log_data[request_id]['query']
+        if 'query' in log_data[request_id]:
+            qry = log_data[request_id]['query']
         if time_queued > queue_time_over_millis:
             queued_count += 1
-            print(f"{request_id},{log_data[request_id]['start']},{log_data[request_id]['sent']},{log_data[request_id]['got']},{log_data[request_id]['duration']},{time_queued},{log_data[request_id]['query']}")
+            print(f"{request_id}, {log_data[request_id]['start']}, {log_data[request_id]['sent']}, {log_data[request_id]['got']}, {log_data[request_id]['duration']}, {time_queued}, {log_data[request_id]['query']}")
             avg_time_queued += time_queued
             if qry not in query_data:
                 query_data[qry]['calls'] = 1
@@ -94,14 +95,19 @@ for request_id in log_data.keys():
 print("=======================================================================================================")
 
 print("\n=============================================== Results ===============================================")
+print(f"Total requests, Queued requests(over {queue_time_over_millis} ms), Average time queued")
+print("=======================================================================================================")
 if avg_time_queued > 0:
     avg_time_queued /= queued_count
-print(f"Requests analyzed: {len(log_data)}, Total Queued requests (over {queue_time_over_millis} ms): {queued_count}, Average time queued: {avg_time_queued} ms")
+print(f"{len(log_data)}, {queued_count}, {avg_time_queued} ms")
 print("=======================================================================================================")
 
-print("\n============================================ Query Results ============================================")
-for qry in query_data.keys():
-    print(query_data[qry])
-    avg_time_queued = query_data[qry]['duration'] / query_data[qry]['queued_calls']
-    print(f"Query: {qry}, Total calls: {query_data[qry]['calls']}, Queued calls: {query_data[qry]['queued_calls']}, Average time queued: {avg_time_queued} ms")
+print("\n=========================================== Results by Query ==========================================")
+print("Query, Total requests,Queued requests,Average time queued")
 print("=======================================================================================================")
+for qry in query_data.keys():
+    if query_data[qry]['queued_calls'] > 0:
+        avg_time_queued = query_data[qry]['duration'] / query_data[qry]['queued_calls']
+        print(f"{qry}, {query_data[qry]['calls']}, {query_data[qry]['queued_calls']}, {avg_time_queued} ms")
+print("=======================================================================================================")
+
