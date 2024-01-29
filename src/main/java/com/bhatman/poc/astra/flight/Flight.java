@@ -1,6 +1,7 @@
 package com.bhatman.poc.astra.flight;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.cassandra.core.mapping.Column;
@@ -25,4 +26,8 @@ public class Flight {
 
 	@Column(value = "actual_event")
 	private Map<String, Instant> actualEvent;
+
+	@Column(value = "sys_local_hist")
+	private List<SysLocalHist> sysLocalHist;
+
 }

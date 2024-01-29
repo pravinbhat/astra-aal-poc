@@ -30,9 +30,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.client.RestTemplate;
 
+import com.bhatman.poc.astra.flight.SysLocalHistCodec;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.data.UdtValue;
+import com.datastax.oss.driver.api.core.type.UserDefinedType;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
+import com.datastax.oss.driver.api.core.type.codec.registry.MutableCodecRegistry;
 import com.datastax.oss.driver.internal.core.tracker.RequestLogger;
 
 @SpringBootApplication
@@ -109,5 +114,20 @@ public class AstraAALPocApplication {
 		JmxReporter reporter = JmxReporter.forRegistry(registry).inDomain("bhatman.driver.metrics").build();
 		reporter.start();
 		return reporter;
+	}
+	
+	@Bean
+	public MutableCodecRegistry getCodes(CqlSession cqlSession) {
+		UserDefinedType sysLocalHistUdt =
+				cqlSession
+			        .getMetadata().getKeyspace("test_ks")
+			        .flatMap(ks -> ks.getUserDefinedType("sys_local_hist"))
+			        .orElseThrow(IllegalStateException::new);
+
+		MutableCodecRegistry registry =
+				(MutableCodecRegistry) cqlSession.getContext().getCodecRegistry();
+		TypeCodec<UdtValue> innerCodec = registry.codecFor(sysLocalHistUdt);
+		registry.register(new SysLocalHistCodec(innerCodec));
+		return registry;
 	}
 }

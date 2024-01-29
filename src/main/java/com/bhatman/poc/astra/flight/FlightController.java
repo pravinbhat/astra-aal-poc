@@ -135,7 +135,8 @@ public class FlightController {
 	public ResponseEntity<FlightResponse> addFlights(@PathVariable String airportId, @PathVariable int flightCount, @PathVariable int startIndex) {
 		List<Flight> flights = new ArrayList<>();
 		for (int i = startIndex; i < startIndex + flightCount; i++) {
-			Flight newFlight = new Flight(new FlightPk(airportId, null), airportId + "-flight-" + i, "This is flight number " + i + " from airport. Hope to see you soon!" + airportId, null);
+			Flight newFlight = new Flight(new FlightPk(airportId, null), 
+					airportId + "-flight-" + i, "This is flight number " + i + " from airport. Hope to see you soon!" + airportId, null, null);
 			newFlight.getFlightPk().setFlightId(Uuids.timeBased());
 			flights.add(newFlight);
 		}
@@ -207,7 +208,10 @@ public class FlightController {
 //		flightDAO.update(new Flight(updateFlight.getFlightId(), updateFlight.getFlightName(),
 //				updateFlight.getActualEvent()));
 
-		flightAppend.updateWithAppendEntry(updateFlight).forEach(cqlSession::execute);
+		BatchStatementBuilder batchBldr = BatchStatement.builder(BatchType.UNLOGGED);
+		flightAppend.updateWithAppendEntry(updateFlight).forEach(batchBldr::addStatement);
+		cqlSession.execute(batchBldr.build());
+
 		FlightPk fPk = new FlightPk(airportId, flightId);
 
 		return new ResponseEntity<>(new FlightResponse(flightRepo.findById(fPk).get(), "Flight updated via DAO!"),
